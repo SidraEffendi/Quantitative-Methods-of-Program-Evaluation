@@ -1,0 +1,271 @@
+---
+title: "assignment-4"
+author: "Sidra Effendi"
+date: "03/04/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+#knitr::opts_chunk$set(echo = TRUE)
+print(getwd())
+#remove.packages("ggplot2")
+#remove.packages("stargazer")
+#remove.packages("sandwich")
+#install.packages(c("haven","stargazer","dplyr","sandwich","ggplot2","tidyverse","car", "ri","textreg", "lmtest","AER"))
+#install.packages("estimatr")
+#install.packages("margins")
+
+packages <- c("haven","stargazer","dplyr","sandwich","ggplot2","tidyverse","car", "ri","textreg", "lmtest","AER","estimatr","margins")
+invisible(sapply(packages, library, character.only = TRUE))
+```
+
+```{r , include=FALSE}
+civil_war <- read_dta("civilwar_v2.dta")
+civil_war
+```
+```{r}
+sd(civil_war$war)
+```
+```{r}
+mean(civil_war$war)
+```
+
+# Q.1
+## (a)
+
+```{r}
+civil_war$ethfrac_gdp_per_capita=civil_war$ethfrac*civil_war$gdp_per_capita
+model1 <- war ~ ethfrac + gdp_per_capita + ethfrac_gdp_per_capita 
+m1 <- lm(model1, data=civil_war) # Adjust standard errors 
+cov1 <- vcovHC(m1, type = "HC1") 
+r_se1 <- sqrt(diag(cov1)) # Robust SEs 
+
+summary(lm_robust(model1, data=civil_war, se_type = "stata"))
+```
+
+The coefficient on the interaction term is -0.01507 and it is statistically significant since the p-value is less than 0.05 and |t-value|=5.443 is greater than 1.96. Compared to the standard deviation on the output column war which is 0.345, the magnitude of interaction term coefficient is very small.
+
+
+To interpret the coefficient on interaction term we can consider there is unit change in the GDP, that is,
+
+delta (war)/delta(GDP) = beta_{gdp_per_capita} + beta_{ethfrac_gdp_per_capita} * ethfrac
+                       
+                       = -0.00646 -0.01507 * ethfrac
+
+We can plug in value for ethfrac= 0.5960, which I picked from the given dataset.
+
+delta (war)/delta(GDP) = -0.00646 -0.01507 * 0.5960 = -0.0154
+
+On average, we predict there is a 1.54 percentage points decrease in the probability that there is a interstate conflict in a country associated with a unit change in the GDP per capita of a country when probability that two randomly drawn individuals in a country will be from different ethnolinguistic groups (measure of ethnic fractionalization)  is 0.5960.
+
+
+
+To interpret the coefficient on interaction term we can also consider there is unit change in the measure of ethnic fractionalization, that is,
+
+delta(war)/delta(ethfrac) = beta_{etcfrac} + beta_{ethfrac_gdp_per_capita} * gdp_per_capita
+                       
+                          = 0.19548 -0.01507 * gdp_per_capita
+
+We can plug in value for gdp_per_capita= 21.0992527, which I picked from the given dataset.
+
+delta (war)/delta(ethfrac) = 0.19548 - 0.01507 * 21.0992527 = -0.1225
+
+On average, we predict there is a 12.25 percentage points decrease in the probability that there is a interstate conflict in a country associated with a unit change in the probability that two randomly drawn individuals in a country will be from different ethnolinguistic groups when the GDP per capita of a country is 0.6312.
+
+
+
+# Q.2
+## (a)
+```{r}
+civil_war$ethfrac_ncontig = civil_war$ethfrac*civil_war$ncontig
+model2 <- war ~ ethfrac + ncontig + ethfrac_ncontig 
+m2 <- lm(model2, data=civil_war) # Adjust standard errors 
+cov2   <- vcovHC(m2, type = "HC1") 
+r_se2 <- sqrt(diag(cov2)) # Robust SEs 
+
+summary(lm_robust(model2, data=civil_war, se_type = "stata"))
+```
+
+The coefficient on the interaction term is 0.46126 and it is statistically significant since the p-value is quite less than 0.05 and |t-value| = 9.977 is much greater than 1.96. Compared to the standard deviation on the output column war which is 0.345, the magnitude of interaction term coefficient is large.
+
+Our regression equation is,
+
+war^ = 0.06405 - 0.13258* ethfrac - 0.03372 * ncontig + 0.46126 * ethfrac * ncontig
+
+Regression equation for non-contiguous countries,
+
+war1^ = 0.06405 - 0.13258* ethfrac - 0.03372 * (1) + 0.46126 * ethfrac * (1)
+      = 0.03033 + 0.32868* ethfrac 
+
+Regression equation for contiguous countries,
+
+war2^ = 0.06405 - 0.13258* ethfrac - 0.03372 * (0) + 0.46126 * ethfrac * (0) 
+      = 0.06405 - 0.13258* ethfrac
+      
+For ethfrac = 0.5960 (picked from dataset),
+
+war1^ =  0.226
+
+war2^ = -0.015
+
+For ethfrac = 0.5960, we observer the estimated average probability of interstate conflict in a county to increase by 22.6 percentage points for a non-contiguous country (country with  territory  holding  at  least  10,000  people  and  separated  from  the  land  area  containing  the  capital city either by land or by 100 km of water), where as for a contiguous country the estimated average probability of interstate conflict will decrease by 1.5 percentage points.
+
+# Q.3
+## (a)
+```{r}
+model3 <- war ~ log_lagged_pop + log_lagged_gdp_per_capita + ncontig + ethfrac + new_state + dem_high + instab + prior 
+m3 <- lm(model3, data=civil_war) # Adjust standard errors 
+cov3 <- vcovHC(m3, type = "HC1") 
+r_se3 <- sqrt(diag(cov3)) # Robust SEs 
+
+summary(lm_robust(model3, data=civil_war, se_type = "stata"))
+```
+The order is similar to one in the above output.
+
+1. A 1% increase in the population in thousands in the country in the lagged year is on average associated with a 0.032 (0.03203 * 0.01) percentage points or 23.2 [(0.03203/0.1380514) *100] percent  increase in the probability that there will be interstate conflict in the country, holding lagged_gdp_per_capita, ncontig, ethfrac, new_state,dem_high,instab and prior as constant. The coefficient is statistically significant at 5% confidence as t-value=11.5963 is greater than 1.96 and p-value is less than 0.05. Also, statistically significant at 10% and 1% levels.
+
+2. A 1% increase in the lagged gross domestic product (GDP) per capita of a country is on average associated with a 0.041 (0.04131 * 0.01) percentage points or 29.9 [(0.04131/0.1380514) *100] percent  decrease in the probability that there will be interstate conflict in the country, holding other variables constant. The coefficient is statistically significant at 5% confidence as t-value=|-9.8041| is greater than 1.96 and p-value is less than 0.05. Also, statistically significant at 10% and 1% levels.
+
+3. On average the probability that there will be interstate conflict in a non-contiguous country is predicted to be 7.67 percentage points or 55.5 [(0.0767/0.1380514) *100] percent more than if the country was contiguous, holding other variables constant. The coefficient is statistically significant at 5% confidence as t-value=|6.9873| is greater than 1.96 and p-value is less than 0.05. Also, statistically significant at 10% and 1% levels.
+
+4. On average, with one unit increase in the probability that two randomly drawn individuals in a country will be from different ethnolinguistic groups, the probability that there will be interstate conflict in the country is predicted to increase by 6.74  percentage points or 48.8 [(0.06743/0.1380514) *100] percent, holding other variables constant. The coefficient is statistically significant at 5% confidence as t-value=|5.4207| is greater than 1.96 and p-value is less than 0.05. Also, statistically significant at 10% and 1% levels.
+
+5. On average the probability that there will be interstate conflict in a country in the first year of it's existence is predicted to be 4.22 percentage point or 30.57 [(0.04220/0.1380514)*100] percent more than if the country was not in the first year of it's existence, holding other variables constant. The coefficient is statistically not significant at 5% (and 1%) confidence level as p-value is greater than 0.05 and t-value is less than 1.96, but, statistically significant at 10% as p-value < 0.1.
+
+6. On average the probability that there will be interstate conflict in a country where the level of democracy is high or the  level  of  democracy  in  a  country  in  the  lagged year is greater than 5 is predicted to be 1.71  percentage point or 12.4 [(0.01711/0.1380514) *100]  percent more than if the country does not have a high level of democracy, holding other variables constant. The coefficient is statistically significant at 5% confidence level as p-value is less than 0.05 and t-value= 2.0814 is greater than 1.96. Also, statistically significant at 10% but not at 1%.
+
+7. On average the probability that there will be interstate conflict in a country which is unstable or the  level  of  democracy  in  the  country changed by at least 2 in the last 3 years in  the  lagged year, is predicted to be 1.06 percentage point or  7.65 [(0.01060/0.1380514) *100] percent less than if the country was not unstable, holding other variables constant. The coefficient is not statistically significant at 5% confidence level as p-value is greater than 0.05 and t-value is less than 1.96. Also, not statistically significant at 10% and 1% levels.
+
+8. On average the probability that there will be interstate conflict in a country in the given year if there was an ongoing civil conflict in the country in the prior year, is predicted to be 64.023 percentage point or 46.4 [(0.64023/0.1380514) *100] percent more than if the country had seen no ongoing civil conflict in the previous year, holding other variables constant. The coefficient is statistically significant at 5% confidence level as p-value is less than 0.05 and t-value=39.8767 is greater than 1.96. Also, statistically significant at 10% and 1% levels.
+
+# Q.4
+```{r}
+yhat <- as_tibble(predict(m3)) 
+yhat %>% mutate(out=if_else(value>1 | value < 0 ,1,0)) %>% 
+summarise(perc_out=mean(out)) 
+```
+We see that using the LPM model we have 23.8% output values which are either less than 0 or greater than 1. We want the probability of interstate conflict in a country in a given year and any value outside the bounds of (0,1) is meaningless and might lead to confusion.
+
+# Q.5
+```{r}
+m4 <- glm(model3, family = "binomial", data=civil_war) 
+# Adjust standard errors 
+cov4  <- vcovHC(m4, type = "HC1") 
+r_se4 <- sqrt(diag(cov4)) # Robust SEs 
+```
+## (a)
+```{r}
+yhat <-as_tibble(predict(m4, newdata = civil_war, type = "response"))
+yhat %>% mutate(out=if_else(value>1 | value < 0 ,1,0)) %>% 
+summarise(perc_out=mean(out)) 
+```
+Here we see that we get no values less than 0 or greater than 1, for probability of interstate conflict in a country in a given year. This is because we are using a logit model which bounds the predicted values between 0 and 1. 
+
+## (b)
+```{r}
+#summary(lm_robust(model3, data=civil_war, se_type = "stata"))
+summary(m4)
+```
+
+Comparing LPM to the logit model, we see that as per the logit model the variable dem_high is statistically significant only at 10% level whereas in LPM dem_high is also statistically significant at 5% level.  In terms of sign only the sign of the intercept has changed from +ve to -ve and it wasn't significant in the LPM model not even at 10% level but is significant in logit model at 1%, 5% and 10% level. Rest the significance values and signs are similar for other variables in both the models.
+
+# Q.6
+
+Our regression equation from question3 for LPM model is
+
+war^ = 0.03497+ 0.03203* log_lagged_pop-0.04131* log_lagged_gdp_per_capita+0.07670* ncontig+0.06743* ethfrac+ 0.04220* new_state
+        + 0.01711* dem_high -0.01060 * instab+ 0.64023 *prior
+        
+For the given values,
+
+war1^ = 0.03497+ 0.03203* 8 -0.04131* 5 +0.07670* 1 +0.06743* 0.5+ 0.04220* 1 + 0.01711* 0 -0.01060 * 0+ 0.64023 *0
+      
+      = 0.0443825 -0.04131* 5  = 0.237275
+
+After lagged GDP per capita increased by 10%,
+
+war2^ = 0.03497+ 0.03203* 8 -0.04131* 5.1 +0.07670* 1 +0.06743* 0.5+ 0.04220* 1 + 0.01711* 0 -0.01060 * 0+ 0.64023 *0
+      
+      = 0.0443825 -0.04131* 5.1 = 0.233144
+
+The change in probability is,
+
+war2^-war1^ = 0.233144 - 0.237275 = -0.004131
+
+If the lagged gdp per capita in the country increased by 10% there is a 0.41 percentage point decrease in the probability that there will be a interstate conflict in a country, holding other at variables constant value.
+
+# Q.7
+## (a)
+Our regression equation for logit model is
+
+F = -3.19941+ 0.50548* log_lagged_pop-0.71558* log_lagged_gdp_per_capita+0.98701* ncontig+0.82190* ethfrac+ 0.66372* new_state
+        + 0.27179* dem_high -0.06037 * instab+ 4.10144 *prior
+        
+For the given values,
+
+F1  = -3.19941 + 0.50548* 8 - 0.71558* 5 + 0.98701* 1 + 0.82190* 0.5+ 0.66372* 1 + 0.27179* 0 -0.06037 * 0 + 4.10144 *0
+   
+    = - 0.67179
+
+After agged GDP per capita increased by 10%,
+
+F2  = -3.19941 + 0.50548* 8 - 0.71558* 5.1 + 0.98701* 1 + 0.82190* 0.5+ 0.66372* 1 + 0.27179* 0 -0.06037 * 0 + 4.10144 *0
+   
+    = -0.74338
+
+
+## (b)
+
+The change in probability is,
+
+Pr(war=1) = 1/[1+e^(F1)] = 0.3381
+
+Pr(war=1) = 1/[1+e^(F2)] = 0.3223
+
+0.3381 - 0.3223 = 0.0158
+
+If the lagged gdp per capita in a country increased by 10% there is a 1.58 percentage point decrease in the probability that there will be a interstate conflict in a country, holding other at variables constant value.
+
+
+## (c)
+```{r}
+at <- data.frame(log_lagged_pop=8,  
+
+              log_lagged_gdp_per_capita=c(5,5.1),  
+
+              ncontig=1,  
+
+              ethfrac=0.5,  
+
+              new_state=1,  
+
+              dem_high=0,  
+
+              instab=0,  
+
+              prior=0) 
+
+ 
+
+margins1 <- margins(m4, at = at,type = "response") 
+
+margins1 %>% group_by(log_lagged_pop, log_lagged_gdp_per_capita, ncontig, ethfrac, new_state, dem_high, instab, prior) %>%  
+
+              summarize(margin=mean(fitted)) %>% ungroup() %>%  
+
+              dplyr::select(log_lagged_gdp_per_capita,margin) 
+```
+
+If the lagged gdp per capita in a country increased by 10% there is a 1.58 percentage point decrease in the probability that there will be a interstate conflict in a country, holding other at variables constant value.
+
+# Q.8
+
+For the same set set of values and same % increase in the value of log gdp per capita, LPM reported a decrease in the probability of interstate conflict in a country as 0.41 percentage points while as logit reported a decrease of 1.58 percentage points. We know for sure that both of these model fit the data in a different way and that is why we get such different results. LPM results in a linear line fitted on the data while as logit fits a S-shaped curve on the data. 
+ 
+ 
+ 
+
+```{r}
+stargazer(m1,m2,m3,m4, se=list(r_se1,r_se2,r_se3,r_se4), type = "text", header=TRUE, omit.stat = c("f","ser"), digits=2, column.sep.width="- 5pt",title="Table 1: Results of Regression of annual earnings on years of education and other control variables",dep.var.caption="", notes="Robust standard errors in parantheses")
+```
+

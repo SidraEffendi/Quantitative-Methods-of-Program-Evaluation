@@ -1,0 +1,229 @@
+---
+title: "assignment2"
+author: "Sidra Effendi"
+date: "20/02/2021"
+output: pdf_document
+editor_options:
+  chunk_output_type: console
+---
+
+```{r setup}
+#knitr::opts_knit$set(root.dir = normalizePath("/Users/sidraeffendi/Desktop/PP639/")) 
+library(haven)
+getwd()
+pset2 <- read_dta("/Users/sidraeffendi/Desktop/PP639/pset2.dta")
+head(pset2)
+
+```
+
+
+# Q.1 
+## (a)
+```{r}
+# measures of spread
+summary(pset2$drate_esoph)
+```
+The mean of death rate from esophageal cancer is 13.157 and the median is 7.836. The minimum death rate from esophageal cancer is 0 while as the max is 91.98.
+
+```{r}
+# get the percentile information
+quantile(pset2$drate_esoph)
+```
+The 25th percentile for death rate from esophageal cancer is 3.8, the 50th percentile is 7.836 and the 75th percentile is 16.108
+
+## (b) 
+```{r}
+# apply mask for clean and dirty rivers
+clean_rivers <- pset2[pset2$clean_river == 1,]
+dirty_rivers <- pset2[pset2$dirty_river == 1,]
+#head(clean_rivers)
+#head(dirty_rivers)
+```
+
+```{r}
+# Select numeric columns for clean rivers
+clean_rivers.numcols <- clean_rivers[, sapply(clean_rivers, is.numeric)]
+# find the mean
+colMeans(clean_rivers.numcols)
+```
+
+```{r}
+# Select numeric columns dirty rivers
+dirty_rivers.numcols <- dirty_rivers[, sapply(dirty_rivers, is.numeric)]
+# find the mean
+colMeans(dirty_rivers.numcols)
+```
+When the rivers are clean we see the water quality is
+
+## (c)
+```{r}
+# apply mask for urban and non-urban areas
+urban <- pset2[pset2$urban == 1,]
+non_urban <- pset2[pset2$urban == 0,]
+```
+
+```{r}
+# Select numeric columns for urban areas
+urban.numcols <- urban[, sapply(urban, is.numeric)]
+# find the mean
+colMeans(urban.numcols)
+```
+
+```{r}
+# Select numeric columns for non-urban areas
+non_urban.numcols <- non_urban[, sapply(non_urban, is.numeric)]
+# find the mean
+colMeans(non_urban.numcols)
+```
+
+## (d)
+```{r scatterplot, echo=FALSE}
+# Graph the death rate from eso-cancer against water grade
+plot(pset2$water_grade,pset2$drate_esoph)
+```
+## (e)
+Yes,there appears to be a relationship between esophageal cancer and water quality. The higher the water grade, the worse is the water quality and higher the death rate due to esophageal cancer. For water grade above 5 we see the death rate going 80 and above, while as for water less than 2 the death rate from esophageal cancer is at most 20 (approximately).
+
+# Q.2 Regression analysis I
+
+## (a) 
+```{r}
+# regress death rate from esophageal cancer against water grade.
+linearMod <- lm(pset2$water_grade ~ pset2$drate_esoph, data=pset2) 
+summary(linearMod)
+```
+
+$$
+\hat {drate\_esoph_i} = 0.015\ +\ 3.472\ *\ water\_grade_i
+$$
+## b(i)
+$$ \hat{\beta_1} = 3.472 $$
+On average, for a unit increase in the value of water grade, there is an expected increase of 3.472 in the death rate from esophageal cancer.
+
+## b(ii)
+$$ SE(\hat{\beta_1}) = 0.148$$
+For the different samples of a population we get different values of $$\hat{\beta_1}$$. So, the standard error of the slope represents how much far apart do the the slope values lie from the mean. This is supposed to be a normal distribution with the mean at the center.
+
+## b(iii)
+$$ T\_stat\ for\ the\ test\ of\ null\ hypothesis\ that\ \hat{\beta_1} = 0\  is\ 23.392$$
+With 95% confidence, since the test statistic is much greater than the critical value of 1.96, we reject the null hypothesis that $$\hat{\beta_1} = 0$$.
+
+## b(iv)
+95% confidence interval = $$[mean(\hat{\beta_1} )- 1.96 * SE(\hat{\beta_1}) , mean(\hat{\beta_1})+ 1.96 * SE(\hat{\beta_1})]$$
+                        = 
+                        
+```{r}
+res <- t.test(pset2$drate_esoph, pset2$water_grade, data = pset2)
+res
+```
+
+We are confident that the actual value of the slope, $${\beta_1}$$ lies between 6.912 and 12.064.
+
+## b(v)
+$$\hat{\beta_0} = 0.015$$
+On average, the expected value of death rates due to esophageal cancer when the water-grade value is 0, is 0.015
+## b(vi)
+The no.of observations = 
+
+## b(vii)
+$$R^2\ = \ 0.0287$$
+Water grade is able to explain 2.87% of the variance in the death rates due to esophageal cancer.
+
+## (c)
+For a site with water grade = 3
+$$ \hat {drate\_esoph_i} = 0.015\ +\ 3.472\ *\ 3$$
+                        = 0.015 + 
+                        =
+                        
+For a site with water grade = 5
+$$ \hat {drate\_esoph_i} = 0.015\ +\ 3.472\ *\ 5$$
+                        = 0.015 +
+                        =
+                        
+                        
+# Regression analysis II
+## (a) 
+```{r}
+# regress death rate from esophageal cancer against water grade.
+linearMod <- lm(pset2$water_grade ~ pset2$drate_esoph, data=pset2) 
+summary(linearMod)
+```
+
+## (b)
+THe omitted category is...
+
+## c(i)
+$$ \hat{\beta_1} = 3.472 $$
+On average, for a unit increase in the value of water grade, there is an expected increase of 3.472 in the death rate from esophageal cancer.
+
+# c(ii)
+$$ SE(\hat{\beta_1}) = 0.148$$
+For the different samples of a population we get different values of $$\hat{\beta_1}$$. So, the standard error of the slope represents how much far apart do the the slope values lie from the mean. This is supposed to be a normal distribution with the mean at the center.
+
+# c(iii)
+$$ T\_stat\ for\ the\ test\ of\ null\ hypothesis\ that\ \hat{\beta_1} = 0\  is\ 23.392$$
+With 95% confidence, since the test statistic is much greater than the critical value of 1.96, we reject the null hypothesis that $$\hat{\beta_1} = 0$$.
+
+# c(iv)
+95% confidence interval = $$[mean(\hat{\beta_1} )- 1.96 * SE(\hat{\beta_1}) , mean(\hat{\beta_1})+ 1.96 * SE(\hat{\beta_1})]$$
+                        = 
+                        
+```{r}
+res <- t.test(pset2$drate_esoph, pset2$water_grade, data = pset2)
+res
+```
+We are confident that the actual value of the slope, $${\beta_1}$$ lies between 6.912 and 12.064.
+
+# c(v)
+$$\hat{\beta_0} = 0.015$$
+On average, the expected value of death rates due to esophageal cancer when the water-grade value is 0, is 0.015
+# c(vi)
+The no.of observations = 
+
+# c(vii)
+$$R^2\ = \ 0.0287$$
+Water grade is able to explain 2.87% of the variance in the death rates due to esophageal cancer.
+
+# (d)
+For a site with water grade = 3
+$$ \hat {drate\_esoph_i} = 0.015\ +\ 3.472\ *\ 3$$
+                        = 0.015 + 
+                        =
+                        
+For a site with water grade = 5
+$$ \hat {drate\_esoph_i} = 0.015\ +\ 3.472\ *\ 5$$
+                        = 0.015 +
+                        =
+                        
+
+
+
+
+
+
+# Q.4
+
+# Q.5 
+
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
