@@ -1,2 +1,2 @@
 # Quantitative-Methods-of-Program-Evaluation
-Used R to implement concept of causal inference, confidence intervals, etc.
+Implement concept of causal inference, confidence intervals, etc. in R
